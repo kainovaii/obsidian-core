@@ -5,6 +5,9 @@ import fr.kainovaii.core.security.csrf.CsrfProtection;
 import fr.kainovaii.core.security.role.HasRole;
 import fr.kainovaii.core.security.role.RoleChecker;
 import fr.kainovaii.core.web.di.Container;
+import fr.kainovaii.core.web.middleware.After;
+import fr.kainovaii.core.web.middleware.Before;
+import fr.kainovaii.core.web.middleware.MiddlewareManager;
 import fr.kainovaii.core.web.route.Route;
 import fr.kainovaii.core.web.route.methods.DELETE;
 import fr.kainovaii.core.web.route.methods.GET;
@@ -103,8 +106,12 @@ public class ControllerLoader
             try {
                 RoleChecker.checkAccess(req, res);
 
-                if (method.isAnnotationPresent(CsrfProtect.class))
-                {
+                if (method.isAnnotationPresent(Before.class)) {
+                    Before beforeAnnotation = method.getAnnotation(Before.class);
+                    MiddlewareManager.executeBefore(beforeAnnotation.value(), req, res);
+                }
+
+                if (method.isAnnotationPresent(CsrfProtect.class)) {
                     if (!CsrfProtection.validate(req)) {
                         logger.warn("CSRF validation failed for {}.{}", controller.getClass().getSimpleName(), method.getName());
                         if (req.session(false) != null) {
@@ -133,7 +140,14 @@ public class ControllerLoader
                     }
                 }
 
-                return method.invoke(controller, args);
+                Object result = method.invoke(controller, args);
+
+                if (method.isAnnotationPresent(After.class)) {
+                    After afterAnnotation = method.getAnnotation(After.class);
+                    MiddlewareManager.executeAfter(afterAnnotation.value(), req, res);
+                }
+
+                return result;
 
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
