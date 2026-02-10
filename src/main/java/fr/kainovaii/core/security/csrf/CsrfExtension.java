@@ -24,8 +24,8 @@ public class CsrfExtension extends AbstractExtension
     private static class CsrfFieldFunction implements Function
     {
         @Override
-        public Object execute(Map<String, Object> args, PebbleTemplate self,
-                              EvaluationContext context, int lineNumber) {
+        public Object execute(Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber)
+        {
             Request req = (Request) context.getVariable("request");
             if (req == null) return "";
 
@@ -42,8 +42,8 @@ public class CsrfExtension extends AbstractExtension
     private static class CsrfTokenFunction implements Function
     {
         @Override
-        public Object execute(Map<String, Object> args, PebbleTemplate self,
-                              EvaluationContext context, int lineNumber) {
+        public Object execute(Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber)
+        {
             Request req = (Request) context.getVariable("request");
             if (req == null) return "";
 

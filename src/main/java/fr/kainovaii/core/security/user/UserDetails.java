@@ -4,7 +4,6 @@ public interface UserDetails
 {
     Object getId();
     String getUsername();
-    String getEmail();
     String getPassword();
     String getRole();
 

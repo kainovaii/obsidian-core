@@ -27,7 +27,8 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository
     }
 
     @Override
-    public boolean validateToken(String sessionId, String token) {
+    public boolean validateToken(String sessionId, String token)
+    {
 
         CsrfToken storedToken = getToken(sessionId);
         if (storedToken == null) {

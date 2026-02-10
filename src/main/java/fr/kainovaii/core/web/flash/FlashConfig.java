@@ -10,9 +10,7 @@ public class FlashConfig
         customCSS = css;
     }
 
-    public static String getCustomCSS() {
-        return customCSS;
-    }
+    public static String getCustomCSS() { return customCSS; }
 
     public static void setDuration(int ms) {
         duration = ms;

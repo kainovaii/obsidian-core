@@ -71,7 +71,8 @@ public class BaseController extends ApiResponse
         UserDetails user = getUserService().loadByUsername(username);
         if (user == null || !user.isEnabled()) return false;
 
-        if (BCrypt.checkpw(password, user.getPassword())) {
+        if (BCrypt.checkpw(password, user.getPassword()))
+        {
             session.attribute("logged", true);
             session.attribute("user_id", user.getId());
             session.attribute("username", user.getUsername());
@@ -106,7 +107,8 @@ public class BaseController extends ApiResponse
         return (T) getUserService().loadById(userId);
     }
 
-    protected static boolean hasRole(Request req, String role) {
+    protected static boolean hasRole(Request req, String role)
+    {
         UserDetails user = getLoggedUser(req);
         return user != null && role.equals(user.getRole());
     }

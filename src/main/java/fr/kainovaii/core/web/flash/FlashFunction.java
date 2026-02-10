@@ -10,7 +10,8 @@ import java.util.Map;
 
 public class FlashFunction implements Function
 {
-    private static String buildFlashScript() {
+    private static String buildFlashScript()
+    {
         String customCSS = FlashConfig.getCustomCSS();
         String positionCSS = FlashConfig.getPositionCSS();
         int duration = FlashConfig.getDuration();
@@ -144,27 +145,22 @@ public class FlashFunction implements Function
         StringBuilder html = new StringBuilder();
 
         if (flashes.containsKey("success")) {
-            html.append(String.format("<div data-flash-success=\"%s\" style=\"display:none;\"></div>%n",
-                    escapeHtml(flashes.get("success"))));
+            html.append(String.format("<div data-flash-success=\"%s\" style=\"display:none;\"></div>%n", escapeHtml(flashes.get("success"))));
         }
 
         if (flashes.containsKey("error")) {
-            html.append(String.format("<div data-flash-error=\"%s\" style=\"display:none;\"></div>%n",
-                    escapeHtml(flashes.get("error"))));
+            html.append(String.format("<div data-flash-error=\"%s\" style=\"display:none;\"></div>%n", escapeHtml(flashes.get("error"))));
         }
 
         if (flashes.containsKey("info")) {
-            html.append(String.format("<div data-flash-info=\"%s\" style=\"display:none;\"></div>%n",
-                    escapeHtml(flashes.get("info"))));
+            html.append(String.format("<div data-flash-info=\"%s\" style=\"display:none;\"></div>%n", escapeHtml(flashes.get("info"))));
         }
 
         if (flashes.containsKey("warning")) {
-            html.append(String.format("<div data-flash-warning=\"%s\" style=\"display:none;\"></div>%n",
-                    escapeHtml(flashes.get("warning"))));
+            html.append(String.format("<div data-flash-warning=\"%s\" style=\"display:none;\"></div>%n", escapeHtml(flashes.get("warning"))));
         }
 
         html.append(buildFlashScript());
-
         return html.toString();
     }
 
