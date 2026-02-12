@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 public class Obsidian
 {
     public final static Logger logger =  Logger.getLogger("Spark");;
-    private static String webPort;
 
     public void connectDatabase()
     {
@@ -21,11 +20,12 @@ public class Obsidian
         String dbType = env.get("DB_TYPE");
         if (dbType == null || dbType.isEmpty()) { dbType = "sqlite"; }
 
-        switch (dbType.toLowerCase()) {
+        switch (dbType.toLowerCase())
+        {
             case "sqlite":
                 String dbPath = env.get("DB_PATH");
                 if (dbPath == null || dbPath.isEmpty()) {
-                    dbPath = "database.db";
+                    dbPath = "Spark/data.db";
                 }
                 DB.initSQLite(dbPath, logger);
                 break;
