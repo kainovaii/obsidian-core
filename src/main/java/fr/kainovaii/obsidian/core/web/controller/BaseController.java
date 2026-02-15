@@ -36,7 +36,7 @@ public class BaseController extends ApiResponse
         try {
             org.reflections.Reflections reflections = new org.reflections.Reflections(Obsidian.getBasePackage());
 
-            java.util.Set<Class<?>> annotatedClasses = reflections.getTypesAnnotatedWith(UserDetailsServiceImpl.class);
+            Set<Class<?>> annotatedClasses = reflections.getTypesAnnotatedWith(UserDetailsServiceImpl.class);
 
             if (annotatedClasses.isEmpty()) {
                 throw new RuntimeException("No class annotated with @UserDetailsServiceImpl found in " + Obsidian.getBasePackage());

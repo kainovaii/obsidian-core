@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 public class ComponentManager
 {
-
     private final PebbleEngine pebbleEngine;
     private final Map<String, Class<? extends LiveComponent>> registeredComponents = new ConcurrentHashMap<>();
 
