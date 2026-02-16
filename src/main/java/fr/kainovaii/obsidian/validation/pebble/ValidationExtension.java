@@ -17,11 +17,6 @@ import java.util.Map;
  */
 public class ValidationExtension extends AbstractExtension
 {
-    /**
-     * Registers validation functions.
-     * 
-     * @return Map of function names to implementations
-     */
     @Override
     public Map<String, Function> getFunctions() {
         Map<String, Function> functions = new HashMap<>();
@@ -29,7 +24,7 @@ public class ValidationExtension extends AbstractExtension
         functions.put("old", new OldFunction());
         return functions;
     }
-    
+
     /**
      * Gets error for field.
      * Usage: {{ error('email') }}
@@ -37,17 +32,19 @@ public class ValidationExtension extends AbstractExtension
     private static class ErrorFunction implements Function
     {
         @Override
-        public Object execute(Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
-            String field = (String) args.get("0");
+        public Object execute(Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber)
+        {
+            String field = (String) args.get("field");
             if (field == null) return "";
-            
-            ValidationErrors errors = (ValidationErrors) context.getVariable("errors");
-            if (errors == null) return "";
-            
+
+            Object errorsObj = context.getVariable("errors");
+            if (errorsObj == null) return "";
+
+            ValidationErrors errors = (ValidationErrors) errorsObj;
             String error = errors.get(field);
             return error != null ? error : "";
         }
-        
+
         @Override
         public List<String> getArgumentNames() {
             List<String> names = new ArrayList<>();
@@ -55,7 +52,7 @@ public class ValidationExtension extends AbstractExtension
             return names;
         }
     }
-    
+
     /**
      * Gets old input value.
      * Usage: {{ old('email') }}
@@ -63,18 +60,33 @@ public class ValidationExtension extends AbstractExtension
     private static class OldFunction implements Function
     {
         @Override
-        public Object execute(Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber) {
-            String field = (String) args.get("0");
+        public Object execute(Map<String, Object> args, PebbleTemplate self, EvaluationContext context, int lineNumber)
+        {
+            String field = (String) args.get("field");
             if (field == null) return "";
-            
-            @SuppressWarnings("unchecked")
-            Map<String, String[]> old = (Map<String, String[]>) context.getVariable("old");
-            if (old == null) return "";
-            
-            String[] values = old.get(field);
-            return values != null && values.length > 0 ? values[0] : "";
+
+            Object oldObj = context.getVariable("old");
+            if (oldObj == null) return "";
+
+            if (oldObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, ?> old = (Map<String, ?>) oldObj;
+
+                Object value = old.get(field);
+
+                if (value instanceof String[]) {
+                    String[] values = (String[]) value;
+                    return values.length > 0 ? values[0] : "";
+                }
+
+                if (value instanceof String) {
+                    return value;
+                }
+            }
+
+            return "";
         }
-        
+
         @Override
         public List<String> getArgumentNames() {
             List<String> names = new ArrayList<>();

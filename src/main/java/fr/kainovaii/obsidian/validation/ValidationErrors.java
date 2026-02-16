@@ -7,7 +7,8 @@ import java.util.Map;
  * Validation errors container.
  * Stores field-level validation errors.
  */
-public class ValidationErrors {
+public class ValidationErrors
+{
     /** Error messages mapped by field name */
     private final Map<String, String> errors = new HashMap<>();
 

@@ -19,8 +19,7 @@ public class LiveComponentsScriptRoute implements Route
 
     static {
         try {
-            InputStream is = LiveComponentsScriptRoute.class.getClassLoader()
-                    .getResourceAsStream("META-INF/resources/obsidian/livecomponents.js");
+            InputStream is = LiveComponentsScriptRoute.class.getClassLoader().getResourceAsStream("META-INF/resources/obsidian/livecomponents.js");
 
             if (is != null) {
                 cachedContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);

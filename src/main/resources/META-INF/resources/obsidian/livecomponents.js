@@ -1,12 +1,12 @@
 /**
  * Obsidian LiveComponents - Client-side reactive component system
- * 
+ *
  * Manages server-side reactive components with automatic DOM updates,
  * real-time validation, and seamless state synchronization.
- * 
+ *
  * @class ObsidianComponents
  * @version 1.0.0
- * 
+ *
  * Features:
  * - live:click - Click event handling with server actions
  * - live:model - Two-way data binding with debouncing
@@ -25,10 +25,10 @@ class ObsidianComponents {
     constructor() {
         /** @type {Map<string, {element: Element, loading: boolean, pollInterval: number|null}>} */
         this.components = new Map();
-        
+
         /** @type {string|null} CSRF token for secure requests */
         this.csrfToken = this.getCsrfToken();
-        
+
         this.init();
     }
 
@@ -95,12 +95,12 @@ class ObsidianComponents {
 
     /**
      * Attaches two-way data binding to inputs with [live:model].
-     * 
+     *
      * Supports modifiers:
      * - live:debounce="500" - Custom debounce time (default: 300ms)
      * - live:blur - Update only on blur
      * - live:lazy - Update only on Enter key
-     * 
+     *
      * @param {Element} element - Component root element
      * @param {string} componentId - Component identifier
      */
@@ -144,25 +144,25 @@ class ObsidianComponents {
      * Attaches form submission handlers with [live:submit].
      * Prevents default form submission and calls server action.
      * Clears validation errors before submission.
-     * 
+     *
      * Usage: <form live:submit="submitForm">
-     * 
+     *
      * @param {Element} element - Component root element
      * @param {string} componentId - Component identifier
      */
     attachSubmit(element, componentId) {
         // Find forms with live:submit
         const forms = element.querySelectorAll('[live\\:submit]');
-        
+
         forms.forEach(form => {
             const action = form.getAttribute('live:submit');
-            
+
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                
+
                 // Clear previous validation errors
                 this.clearValidationErrors(element);
-                
+
                 this.call(componentId, action);
             });
         });
@@ -171,7 +171,7 @@ class ObsidianComponents {
     /**
      * Updates a model field value on the server.
      * Called automatically by live:model bindings.
-     * 
+     *
      * @param {string} componentId - Component identifier
      * @param {string} fieldName - Field name to update
      * @param {*} value - New field value
@@ -183,7 +183,7 @@ class ObsidianComponents {
     /**
      * Creates a debounced function that delays execution.
      * Used for live:model inputs to avoid excessive server calls.
-     * 
+     *
      * @param {Function} func - Function to debounce
      * @param {number} wait - Delay in milliseconds
      * @returns {Function} Debounced function
@@ -202,13 +202,13 @@ class ObsidianComponents {
 
     /**
      * Attaches automatic polling/refresh to components with [live:poll].
-     * 
+     *
      * Formats:
      * - live:poll="5000" - Poll every 5000ms
      * - live:poll="5s" - Poll every 5 seconds
      * - live:poll="2m" - Poll every 2 minutes
      * - live:poll.5s="refreshData" - Poll and call specific action
-     * 
+     *
      * @param {Element} element - Component root element
      * @param {string} componentId - Component identifier
      */
@@ -261,9 +261,9 @@ class ObsidianComponents {
     /**
      * Calls initialization action when component mounts.
      * Used with [live:init] attribute.
-     * 
+     *
      * Usage: <div live:init="loadData">
-     * 
+     *
      * @param {Element} element - Component root element
      * @param {string} componentId - Component identifier
      */
@@ -280,7 +280,7 @@ class ObsidianComponents {
     /**
      * Calls a server action on the component.
      * Manages loading state, state synchronization, and validation errors.
-     * 
+     *
      * @param {string} componentId - Component identifier
      * @param {string} action - Action method name (e.g., "submit", "delete(42)")
      * @param {Object} customParams - Optional custom parameters
@@ -295,7 +295,7 @@ class ObsidianComponents {
         try {
             component.loading = true;
             this.showLoading(component.element);
-            
+
             // Clear validation errors before call
             this.clearValidationErrors(component.element);
 
@@ -331,7 +331,7 @@ class ObsidianComponents {
 
             if (data.success) {
                 this.updateComponent(componentId, data.html);
-                
+
                 // Check if component has validation errors in new state
                 if (data.state && data.state.errors) {
                     this.displayValidationErrors(component.element, data.state.errors);
@@ -352,7 +352,7 @@ class ObsidianComponents {
     /**
      * Captures current state from component inputs.
      * Collects values from all inputs, textareas, and selects.
-     * 
+     *
      * @param {Element} element - Component root element
      * @returns {Object} State object with field values
      */
@@ -384,7 +384,8 @@ class ObsidianComponents {
     /**
      * Updates component DOM with new HTML from server.
      * Replaces element and re-attaches event listeners.
-     * 
+     * Preserves focus and cursor position to avoid jarring UX.
+     *
      * @param {string} componentId - Component identifier
      * @param {string} html - New HTML content
      */
@@ -392,21 +393,35 @@ class ObsidianComponents {
         const component = this.components.get(componentId);
         if (!component) return;
 
-        // Check if element is still in the DOM
         if (!document.contains(component.element)) {
             console.warn('Component element no longer in DOM:', componentId);
             this.components.delete(componentId);
             return;
         }
 
-        // Check if element has a parent
         if (!component.element.parentNode) {
             console.warn('Component element has no parent:', componentId);
             this.components.delete(componentId);
             return;
         }
 
-        // Replace the element
+        const currentHTML = component.element.outerHTML.trim();
+        const newHTML = html.trim();
+
+        if (currentHTML === newHTML) {
+            console.log('HTML identical, skipping DOM update');
+            return;
+        }
+
+        const activeElement = document.activeElement;
+        const hadFocus = component.element.contains(activeElement);
+        const focusedName = hadFocus ? activeElement.getAttribute('name') : null;
+        const focusedModel = hadFocus ? activeElement.getAttribute('live:model') : null;
+        const cursorPosition = hadFocus && activeElement.setSelectionRange
+            ? activeElement.selectionStart
+            : null;
+        const inputValue = hadFocus ? activeElement.value : null;
+
         try {
             const parent = component.element.parentNode;
             const tempDiv = document.createElement('div');
@@ -415,14 +430,31 @@ class ObsidianComponents {
 
             parent.replaceChild(newElement, component.element);
 
-            // Update reference and re-discover
             this.components.set(componentId, {
                 element: newElement,
                 loading: false,
                 pollInterval: component.pollInterval
             });
 
-            // Re-attach event listeners for the new element
+            if (hadFocus && (focusedName || focusedModel)) {
+                const selector = focusedName
+                    ? `[name="${focusedName}"]`
+                    : `[live\\:model="${focusedModel}"]`;
+                const inputToFocus = newElement.querySelector(selector);
+
+                if (inputToFocus) {
+                    requestAnimationFrame(() => {
+                        if (inputValue !== null) {
+                            inputToFocus.value = inputValue;
+                        }
+                        inputToFocus.focus();
+                        if (cursorPosition !== null && inputToFocus.setSelectionRange) {
+                            inputToFocus.setSelectionRange(cursorPosition, cursorPosition);
+                        }
+                    });
+                }
+            }
+
             this.attachModelBindings(newElement, componentId);
             this.attachSubmit(newElement, componentId);
         } catch (error) {
@@ -433,12 +465,12 @@ class ObsidianComponents {
     /**
      * Displays validation errors from server response.
      * Adds error classes to inputs and shows error messages.
-     * 
+     *
      * Error display:
      * - Adds 'is-invalid' and 'border-red-500' classes to inputs
      * - Creates error message spans with class 'error-message'
      * - Automatically clears on next action
-     * 
+     *
      * @param {Element} element - Component root element
      * @param {Object} errors - Validation errors map (field -> message)
      */
@@ -449,23 +481,23 @@ class ObsidianComponents {
         Object.entries(errors).forEach(([field, message]) => {
             // Find input by name or live:model attribute
             const input = element.querySelector(`[name="${field}"], [live\\:model="${field}"]`);
-            
+
             if (input) {
                 // Add error class to input
                 input.classList.add('is-invalid', 'border-red-500');
-                
+
                 // Find or create error message element
                 let errorElement = input.parentElement.querySelector('.error-message, .validation-error');
-                
+
                 if (!errorElement) {
                     errorElement = document.createElement('span');
                     errorElement.className = 'error-message validation-error text-red-500 text-sm mt-1';
                     errorElement.setAttribute('data-validation-error', field);
-                    
+
                     // Insert after input
                     input.parentElement.insertBefore(errorElement, input.nextSibling);
                 }
-                
+
                 errorElement.textContent = message;
                 errorElement.style.display = 'block';
             }
@@ -475,7 +507,7 @@ class ObsidianComponents {
     /**
      * Clears all validation errors from component.
      * Removes error classes and error message elements.
-     * 
+     *
      * @param {Element} element - Component root element
      */
     clearValidationErrors(element) {
@@ -483,7 +515,7 @@ class ObsidianComponents {
         element.querySelectorAll('.is-invalid, .border-red-500').forEach(input => {
             input.classList.remove('is-invalid', 'border-red-500');
         });
-        
+
         // Remove error messages
         element.querySelectorAll('[data-validation-error]').forEach(error => {
             error.remove();
@@ -492,15 +524,15 @@ class ObsidianComponents {
 
     /**
      * Shows loading indicators in component.
-     * 
+     *
      * Supports multiple indicator types:
      * - [live:loading] - Default: shows element
      * - [live:loading.class="spinner"] - Adds specific classes
      * - [live:loading.add="opacity-50"] - Adds classes during loading
      * - [live:loading.remove="hidden"] - Removes classes during loading
-     * 
+     *
      * Also disables all buttons with [live:click] during loading.
-     * 
+     *
      * @param {Element} element - Component root element
      */
     showLoading(element) {
@@ -541,7 +573,7 @@ class ObsidianComponents {
      * Hides loading indicators in component.
      * Reverses changes made by showLoading().
      * Re-enables all buttons.
-     * 
+     *
      * @param {Element} element - Component root element
      */
     hideLoading(element) {
@@ -580,7 +612,7 @@ class ObsidianComponents {
     /**
      * Shows error message in component.
      * Creates a temporary error banner that auto-dismisses after 5 seconds.
-     * 
+     *
      * @param {Element} element - Component root element
      * @param {string} message - Error message to display
      */
@@ -598,7 +630,7 @@ class ObsidianComponents {
      * 1. <meta name="csrf-token"> tag
      * 2. CSRF-TOKEN cookie
      * 3. _csrf cookie
-     * 
+     *
      * @returns {string|null} CSRF token or null if not found
      */
     getCsrfToken() {
@@ -617,13 +649,13 @@ class ObsidianComponents {
 
     /**
      * Parses action string with method call syntax.
-     * 
+     *
      * Supported formats:
      * - "increment" → { name: "increment", params: [] }
      * - "delete(42)" → { name: "delete", params: [42] }
      * - "vote('Functional')" → { name: "vote", params: ["Functional"] }
      * - "update('name', 'John')" → { name: "update", params: ["name", "John"] }
-     * 
+     *
      * @param {string} actionString - Action string to parse
      * @returns {{name: string, params: Array}} Parsed action with name and parameters
      */
@@ -681,14 +713,14 @@ class ObsidianComponents {
 
     /**
      * Parses a parameter value to appropriate JavaScript type.
-     * 
+     *
      * Type detection:
      * - 'true' → boolean true
      * - 'false' → boolean false
      * - 'null' → null
      * - Numeric string → Number
      * - Other → String (as-is)
-     * 
+     *
      * @param {string} value - Value string to parse
      * @returns {*} Parsed value with appropriate type
      */
